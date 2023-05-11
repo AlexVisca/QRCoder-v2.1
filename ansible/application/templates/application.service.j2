@@ -1,0 +1,13 @@
+[Unit]
+Description=Python Application Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory={{ application_path }}/src
+User={{ application_user }}
+ExecStart=/home/{{ application_user }}/.local/bin/gunicorn app:app -b 0.0.0.0:{{ application_port }}
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

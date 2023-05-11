@@ -1,0 +1,14 @@
+---
+- hosts: ACIT4640_application
+  gather_facts: no
+  become: true
+  tasks:
+    - import_role:
+        name: application
+
+- hosts: ACIT4640_webserver
+  gather_facts: no
+  become: true
+  tasks:
+    - import_role:
+        name: http

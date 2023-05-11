@@ -1,0 +1,41 @@
+---
+# tasks file for http
+- name: install dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - acl
+    - nginx
+
+- name: creating frontend directory
+  become: true
+  file:
+    path: "{{ http_static_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+
+- name: copy to frontend directory
+  copy:
+    src: src/html/
+    dest: /frontend/
+    owner: "{{ ansible_user }}"
+
+- name: configuring webserver
+  template:
+    src: default.conf.j2
+    dest: /etc/nginx/sites-available/default
+  register: nginx_config
+
+- name: starting webserver
+  systemd:
+    enabled: yes
+    name: nginx
+    state: started
+
+- name: restarting webserver on configuration update
+  systemd:
+    name: nginx
+    state: restarted
+  when: nginx_config.changed

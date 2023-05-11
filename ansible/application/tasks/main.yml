@@ -1,0 +1,51 @@
+---
+# tasks file for application
+- name: install dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - acl
+    - python3
+    - python3-pip
+
+- name: create application user
+  user:
+    name: "{{ application_user }}"
+
+- name: create application directory
+  file:
+    name: "{{ application_path }}"
+    state: directory
+    owner: "{{ application_user }}"
+
+- name: copy source code to instance
+  copy:
+    src:  src/app/
+    dest: "{{ application_path }}/src"
+    owner: "{{ application_user }}"
+
+- name: copy username file to instance
+  copy:
+    src:  application/files/username.txt
+    dest: "{{ application_path }}/src/username.txt"
+    owner: "{{ application_user }}"
+
+- name: configure application service
+  template:
+    src:  application.service.j2
+    dest: /etc/systemd/system/application.service
+
+- name: install requirements
+  become_user: "{{ application_user }}"
+  pip:
+    requirements: "{{ application_path }}/src/requirements.txt"
+    extra_args: --user
+
+- name: starting application service
+  systemd:
+    daemon_reload: yes
+    enabled: yes
+    name: application.service
+    state: started
